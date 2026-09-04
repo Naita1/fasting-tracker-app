@@ -18,6 +18,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController(text: '123456');
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (ref.read(authProvider).user != null) {
+        context.go(AppRoutes.fasting);
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -93,6 +103,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: authState.isLoading
                   ? const CircularProgressIndicator(color: Colors.white)
                   : const Text('Entrar', style: TextStyle(fontSize: 16, color: Colors.white)),
+            ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () => context.push(AppRoutes.register),
+              child: const Text(
+                'Não tem uma conta? Cadastre-se',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
             ),
           ],
         ),
