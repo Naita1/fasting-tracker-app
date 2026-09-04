@@ -1,47 +1,59 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../models/fasting_protocol.dart';
 import '../../../models/fasting_session.dart';
 import '../../../repositories/fasting_repository.dart';
 import '../../../services/notification_service.dart';
 import '../../../services/timer_service.dart';
-import '../../auth/providers/auth_provider.dart';
+import '../../history/providers/history_provider.dart';
+import 'fasting_state.dart';
 
 final notificationServiceProvider = Provider((ref) => NotificationService());
 final timerServiceProvider = Provider((ref) => TimerService());
 
-final fastingRepositoryProvider = Provider((ref) {
-  return FastingRepository(ref.watch(localStorageServiceProvider));
-});
-
+final fastingRepositoryProvider = Provider((ref) => FastingRepository());
 
 final timerTickerProvider = StreamProvider.autoDispose<int>((ref) {
   return ref.watch(timerServiceProvider).ticker;
 });
 
-final fastingProvider = StateNotifierProvider<FastingNotifier, FastingSession?>((ref) {
+final fastingNotifierProvider =
+    StateNotifierProvider<FastingNotifier, FastingState>((ref) {
   return FastingNotifier(
     ref.watch(fastingRepositoryProvider),
     ref.watch(notificationServiceProvider),
+    ref,
   );
 });
 
-class FastingNotifier extends StateNotifier<FastingSession?> {
+class FastingNotifier extends StateNotifier<FastingState> {
   final FastingRepository _repository;
   final NotificationService _notificationService;
+  final Ref _ref;
 
-  FastingNotifier(this._repository, this._notificationService) : super(null) {
+  static const int _completionNotificationId = 10;
+
+  FastingNotifier(
+    this._repository,
+    this._notificationService,
+    this._ref,
+  ) : super(const FastingState()) {
     loadActiveSession();
   }
 
   void loadActiveSession() {
     try {
-      state = _repository.getActiveSession();
-    } catch (e) {
-      state = null;
+      final session = _repository.getActiveSession();
+      state = FastingState(session: session);
+    } catch (_) {
+      state = const FastingState();
     }
   }
 
   Future<void> startFasting(FastingProtocol protocol) async {
+    if (state.isLoading) return;
+    state = state.copyWith(isLoading: true);
+
     try {
       final now = DateTime.now();
       final plannedEnd = now.add(Duration(hours: protocol.fastingHours));
@@ -55,44 +67,48 @@ class FastingNotifier extends StateNotifier<FastingSession?> {
       );
 
       await _repository.saveActiveSession(session);
-      state = session;
+      state = FastingState(session: session, isLoading: false);
 
       await _notificationService.showNotification(
         id: 1,
         title: 'Jejum Iniciado 🚀',
-        body: 'Seu jejum de ${protocol.name} começou. Boa sorte!',
+        body: 'Seu jejum de ${protocol.name} começou. Mantenha o foco!',
+      );
+
+      await _notificationService.scheduleNotification(
+        id: _completionNotificationId,
+        title: 'Jejum Concluído! 🎉',
+        body: 'Parabéns! Você alcançou sua meta de ${protocol.name}.',
+        scheduledDate: plannedEnd,
       );
     } catch (e) {
+      state = state.copyWith(isLoading: false);
       rethrow;
     }
   }
 
   Future<void> stopFasting({bool isCompleted = true}) async {
-    final current = state;
-    if (current == null) return;
+    final current = state.session;
+    if (current == null || state.isLoading) return;
+
+    state = state.copyWith(isLoading: true);
 
     try {
-      final updatedSession = FastingSession(
-        id: current.id,
-        startedAt: current.startedAt,
-        plannedEndAt: current.plannedEndAt,
+      final updatedSession = current.copyWith(
         actualEndAt: DateTime.now(),
         status: isCompleted ? 'completed' : 'cancelled',
-        protocol: current.protocol,
       );
 
       await _repository.saveToHistory(updatedSession);
       await _repository.clearActiveSession();
-      state = null;
 
-      await _notificationService.showNotification(
-        id: 2,
-        title: isCompleted ? 'Jejum Concluído! 🎉' : 'Jejum Encerrado',
-        body: isCompleted
-            ? 'Parabéns! Você alcançou sua meta de jejum.'
-            : 'Sua sessão de jejum foi encerrada.',
-      );
+      await _notificationService.cancelNotification(_completionNotificationId);
+
+      state = const FastingState();
+
+      _ref.invalidate(historyNotifierProvider);
     } catch (e) {
+      state = state.copyWith(isLoading: false);
       rethrow;
     }
   }
