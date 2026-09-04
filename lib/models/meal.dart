@@ -25,7 +25,34 @@ class Meal {
       id: map['id'] ?? '',
       name: map['name'] ?? '',
       calories: map['calories'] ?? 0,
-      dateTime: DateTime.parse(map['dateTime']),
+      dateTime: map['dateTime'] != null ? DateTime.parse(map['dateTime']) : DateTime.now(),
     );
   }
+
+  Meal copyWith({
+    String? id,
+    String? name,
+    int? calories,
+    DateTime? dateTime,
+  }) {
+    return Meal(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      calories: calories ?? this.calories,
+      dateTime: dateTime ?? this.dateTime,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Meal &&
+        other.id == id &&
+        other.name == name &&
+        other.calories == calories &&
+        other.dateTime == dateTime;
+  }
+
+  @override
+  int get hashCode => id.hashCode ^ name.hashCode ^ calories.hashCode ^ dateTime.hashCode;
 }

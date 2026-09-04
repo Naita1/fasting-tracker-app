@@ -1,37 +1,43 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fasting_tracker_app/models/fasting_session_model.dart';
+import 'package:fasting_tracker_app/models/fasting_session.dart';
+import 'package:fasting_tracker_app/models/fasting_protocol.dart';
 
 void main() {
-  group('FastingSessionModel Unit Tests', () {
-    test('Deve criar uma instancia valida de FastingSessionModel', () {
+  group('FastingSession Unit Tests', () {
+    test('Deve criar uma instancia valida de FastingSession', () {
       final now = DateTime.now();
-      final session = FastingSessionModel(
+      final protocol = FastingProtocol(id: '1', name: '16:8', fastingHours: 16, eatingHours: 8);
+      final session = FastingSession(
         id: '1',
-        startTime: now,
-        targetHours: 16,
-        isCompleted: false,
+        startedAt: now,
+        plannedEndAt: now.add(const Duration(hours: 16)),
+        status: 'active',
+        protocol: protocol,
       );
 
       expect(session.id, equals('1'));
-      expect(session.targetHours, equals(16));
-      expect(session.isCompleted, equals(false));
+      expect(session.status, equals('active'));
+      expect(session.protocol.name, equals('16:8'));
     });
 
     test('Deve converter para Map e reconstruir via fromMap', () {
       final now = DateTime.now();
-      final session = FastingSessionModel(
+      final protocol = FastingProtocol(id: '1', name: '16:8', fastingHours: 16, eatingHours: 8);
+      final session = FastingSession(
         id: '1',
-        startTime: now,
-        targetHours: 16,
-        isCompleted: true,
+        startedAt: now,
+        plannedEndAt: now.add(const Duration(hours: 16)),
+        status: 'completed',
+        actualEndAt: now.add(const Duration(hours: 16)),
+        protocol: protocol,
       );
 
       final map = session.toMap();
-      final restored = FastingSessionModel.fromMap(map);
+      final restored = FastingSession.fromMap(map);
 
       expect(restored.id, equals(session.id));
-      expect(restored.targetHours, equals(session.targetHours));
-      expect(restored.isCompleted, equals(session.isCompleted));
+      expect(restored.status, equals(session.status));
+      expect(restored.protocol.id, equals(session.protocol.id));
     });
   });
 }

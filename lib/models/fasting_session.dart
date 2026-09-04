@@ -5,10 +5,10 @@ class FastingSession {
   final DateTime startedAt;
   final DateTime plannedEndAt;
   final DateTime? actualEndAt;
-  final String status; 
+  final String status;
   final FastingProtocol protocol;
 
-  FastingSession({
+  const FastingSession({
     required this.id,
     required this.startedAt,
     required this.plannedEndAt,
@@ -48,12 +48,70 @@ class FastingSession {
 
   factory FastingSession.fromMap(Map<String, dynamic> map) {
     return FastingSession(
-      id: map['id'] ?? '',
-      startedAt: DateTime.parse(map['startedAt']),
-      plannedEndAt: DateTime.parse(map['plannedEndAt']),
-      actualEndAt: map['actualEndAt'] != null ? DateTime.parse(map['actualEndAt']) : null,
-      status: map['status'] ?? 'active',
-      protocol: FastingProtocol.fromMap(Map<String, dynamic>.from(map['protocol'])),
+      id: map['id']?.toString() ?? '',
+      startedAt: map['startedAt'] != null
+          ? DateTime.parse(map['startedAt'].toString())
+          : DateTime.now(),
+      plannedEndAt: map['plannedEndAt'] != null
+          ? DateTime.parse(map['plannedEndAt'].toString())
+          : DateTime.now().add(const Duration(hours: 16)),
+      actualEndAt: map['actualEndAt'] != null
+          ? DateTime.parse(map['actualEndAt'].toString())
+          : null,
+      status: map['status']?.toString() ?? 'active',
+      protocol: map['protocol'] != null
+          ? FastingProtocol.fromMap(Map<String, dynamic>.from(map['protocol']))
+          : const FastingProtocol(
+              id: '16-8',
+              name: '16:8',
+              fastingHours: 16,
+              eatingHours: 8,
+            ),
     );
+  }
+
+  FastingSession copyWith({
+    String? id,
+    DateTime? startedAt,
+    DateTime? plannedEndAt,
+    DateTime? actualEndAt,
+    String? status,
+    FastingProtocol? protocol,
+  }) {
+    return FastingSession(
+      id: id ?? this.id,
+      startedAt: startedAt ?? this.startedAt,
+      plannedEndAt: plannedEndAt ?? this.plannedEndAt,
+      actualEndAt: actualEndAt ?? this.actualEndAt,
+      status: status ?? this.status,
+      protocol: protocol ?? this.protocol,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is FastingSession &&
+        other.id == id &&
+        other.startedAt == startedAt &&
+        other.plannedEndAt == plannedEndAt &&
+        other.actualEndAt == actualEndAt &&
+        other.status == status &&
+        other.protocol == protocol;
+  }
+
+  @override
+  int get hashCode {
+    return id.hashCode ^
+        startedAt.hashCode ^
+        plannedEndAt.hashCode ^
+        actualEndAt.hashCode ^
+        status.hashCode ^
+        protocol.hashCode;
+  }
+
+  @override
+  String toString() {
+    return 'FastingSession(id: $id, status: $status, protocol: ${protocol.name}, startedAt: $startedAt)';
   }
 }
