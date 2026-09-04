@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/user_model.dart';
 import '../../../repositories/auth_repository.dart';
 import '../../../services/local_storage_service.dart';
+import 'auth_state.dart';
 
 final localStorageServiceProvider = Provider((ref) => LocalStorageService());
 
@@ -9,49 +10,73 @@ final authRepositoryProvider = Provider((ref) {
   return AuthRepository(ref.watch(localStorageServiceProvider));
 });
 
-final authProvider = StateNotifierProvider<AuthNotifier, UserModel?>((ref) {
+final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(ref.watch(authRepositoryProvider));
 });
 
-class AuthNotifier extends StateNotifier<UserModel?> {
+class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
 
-  AuthNotifier(this._repository) : super(null) {
+  AuthNotifier(this._repository) : super(const AuthState()) {
     loadUser();
   }
 
   void loadUser() {
     try {
-      state = _repository.getUser();
-    } catch (e) {
-      state = null;
+      final user = _repository.getUser();
+      state = state.copyWith(user: user);
+    } catch (_) {
+      state = state.copyWith(user: null);
     }
   }
 
-  Future<bool> login(String email, String password) async {
+  Future<void> login(String email, String password) async {
+    state = state.copyWith(isLoading: true, errorMessage: () => null);
+
     try {
       if (email.isEmpty || password.length < 6) {
-        throw Exception('E-mail inválido ou senha com menos de 6 caracteres.');
+        throw InvalidCredentialsException(
+          'E-mail inválido ou senha com menos de 6 caracteres.',
+        );
       }
+
       final user = UserModel(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         email: email,
         isLoggedIn: true,
       );
+
       await _repository.saveUser(user);
-      state = user;
-      return true;
-    } catch (e) {
-      rethrow;
+      state = AuthState(user: user, isLoading: false);
+    } on AuthException catch (e) {
+      state = state.copyWith(
+        isLoading: false, 
+        errorMessage: () => e.message,
+      );
+    } catch (_) {
+      state = state.copyWith(
+        isLoading: false, 
+        errorMessage: () => 'Ocorreu um erro inesperado.',
+      );
     }
   }
 
   Future<void> logout() async {
+    state = state.copyWith(isLoading: true, errorMessage: () => null);
+
     try {
       await _repository.clearUser();
-      state = null;
-    } catch (e) {
-      rethrow;
+      state = const AuthState();
+    } on AuthException catch (e) {
+      state = state.copyWith(
+        isLoading: false, 
+        errorMessage: () => e.message,
+      );
+    } catch (_) {
+      state = state.copyWith(
+        isLoading: false, 
+        errorMessage: () => 'Ocorreu um erro inesperado.',
+      );
     }
   }
 }
