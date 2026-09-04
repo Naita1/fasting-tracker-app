@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/gradient_button.dart';
+import '../../../models/meal.dart';
 
 class AddMealBottomSheet extends StatefulWidget {
-  const AddMealBottomSheet({super.key});
+  final Meal? meal;
+
+  const AddMealBottomSheet({super.key, this.meal});
 
   @override
   State<AddMealBottomSheet> createState() => _AddMealBottomSheetState();
@@ -14,6 +17,15 @@ class _AddMealBottomSheetState extends State<AddMealBottomSheet> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _caloriesController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.meal != null) {
+      _nameController.text = widget.meal!.name;
+      _caloriesController.text = widget.meal!.calories.toString();
+    }
+  }
 
   @override
   void dispose() {
@@ -50,15 +62,15 @@ class _AddMealBottomSheetState extends State<AddMealBottomSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.textSecondary.withOpacity(0.3),
+                  color: AppColors.textSecondary.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Registrar Refeição',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+            Text(
+              widget.meal == null ? 'Registrar Refeição' : 'Editar Refeição',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
             ),
             const SizedBox(height: 20),
             TextFormField(
@@ -81,6 +93,7 @@ class _AddMealBottomSheetState extends State<AddMealBottomSheet> {
             TextFormField(
               controller: _caloriesController,
               keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               textInputAction: TextInputAction.done,
               onFieldSubmitted: (_) => _handleSave(),
               decoration: InputDecoration(
@@ -102,7 +115,7 @@ class _AddMealBottomSheetState extends State<AddMealBottomSheet> {
             ),
             const SizedBox(height: 24),
             GradientButton(
-              text: 'SALVAR REFEIÇÃO',
+              text: widget.meal == null ? 'SALVAR REFEIÇÃO' : 'ATUALIZAR REFEIÇÃO',
               onPressed: _handleSave,
             ),
           ],
