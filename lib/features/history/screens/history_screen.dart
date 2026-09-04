@@ -1,51 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/utils/date_utils.dart';
-import '../../fasting/providers/fasting_provider.dart';
+import '../providers/history_provider.dart';
+import '../widgets/history_card.dart';
 
 class HistoryScreen extends ConsumerWidget {
   const HistoryScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final history = ref.watch(fastingRepositoryProvider).getHistory();
+    final historyState = ref.watch(historyProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Histórico de Jejum')),
-      body: history.isEmpty
-          ? const Center(
-              child: Text('Nenhum histórico encontrado.',
-                  style: TextStyle(color: AppColors.textSecondary)),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: history.length,
-              itemBuilder: (context, index) {
-                final session = history[index];
-                final isCompleted = session.status == 'completed';
+      body: _buildBody(historyState),
+    );
+  }
 
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: ListTile(
-                    leading: Icon(
-                      isCompleted ? Icons.check_circle : Icons.cancel,
-                      color: isCompleted ? AppColors.primary : AppColors.error,
-                      size: 32,
-                    ),
-                    title: Text('Protocolo ${session.protocol.name}',
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(
-                      'Início: ${AppDateUtils.formatDate(session.startedAt)} - ${AppDateUtils.formatTime(session.startedAt)}',
-                    ),
-                    trailing: Text(
-                      AppDateUtils.formatDuration(session.elapsedTime),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                  ),
-                );
-              },
-            ),
+  Widget _buildBody(HistoryState state) {
+    if (state.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
+
+    if (state.errorMessage != null) {
+      return Center(
+        child: Text(
+          state.errorMessage!,
+          style: const TextStyle(color: AppColors.error),
+        ),
+      );
+    }
+
+    if (state.sessions.isEmpty) {
+      return const Center(
+        child: Text(
+          'Nenhum histórico encontrado.',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: state.sessions.length,
+      itemBuilder: (context, index) {
+        return HistoryCard(session: state.sessions[index]);
+      },
     );
   }
 }
