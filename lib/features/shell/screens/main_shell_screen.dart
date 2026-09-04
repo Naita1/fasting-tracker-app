@@ -10,6 +10,7 @@ class MainShellScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       body: navigationShell,
       bottomNavigationBar: Container(
         margin: const EdgeInsets.only(left: 16, right: 16, bottom: 20),
@@ -28,7 +29,12 @@ class MainShellScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           child: BottomNavigationBar(
             currentIndex: navigationShell.currentIndex,
-            onTap: (index) => navigationShell.goBranch(index),
+            onTap: (index) {
+              navigationShell.goBranch(
+                index,
+                initialLocation: index == navigationShell.currentIndex,
+              );
+            },
             backgroundColor: AppColors.surface,
             selectedItemColor: AppColors.primary,
             unselectedItemColor: AppColors.textSecondary,
