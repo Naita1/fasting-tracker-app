@@ -6,13 +6,29 @@ Aplicativo de controle de jejum intermitente e registro calórico diário, desen
 
 ## ✨ Funcionalidades (MVP Atendido)
 
-- **Autenticação:** Sessão com persistência local.
-- **Protocolos de Jejum:** Seleção de modelos pré-definidos (12:12, 16:8, 18:6) e criação de protocolos customizados.
-- **Timer Resiliente (Core):** Cálculo preciso com suporte a background/offline, permitindo pausar e encerrar o jejum sem perda de dados.
-- **Notificações:** Alertas agendados nativamente para o início e o término previsto do jejum.
-- **Registro de Refeições:** Inserção, edição e exclusão de refeições com cálculo automático.
-- **Dashboard Diário:** Acompanhamento do tempo total de jejum, calorias consumidas e status da meta diária.
-- **Histórico e Gráficos:** Visualização de dias anteriores e acompanhamento de evolução semanal.
+- **Autenticação Local e Sessão Persistente**
+  - Login simples que salva o estado localmente, garantindo que o usuário não precise inserir credenciais a cada abertura do app.
+
+- **Gestão de Protocolos de Jejum**
+  - **Pré-definidos:** Acesso rápido aos modelos mais utilizados (12:12, 16:8 e 18:6).
+  - **Customizado:** Flexibilidade total para o usuário definir suas próprias janelas de restrição alimentar.
+
+- **Timer Resiliente (Core Feature)**
+  - Interface completa com ações para iniciar, pausar e encerrar o jejum, exibindo o tempo decorrido e o tempo restante.
+  - **À prova de falhas:** Continua operando em background. Graças à lógica de Timestamps, se o app for "morto" pelo sistema operacional, nenhum dado de tempo é perdido.
+
+- **Notificações Inteligentes (Offline)**
+  - Alertas locais agendados nativamente informam o usuário exatamente no momento em que o jejum inicia e quando a meta de término é atingida.
+
+- **Controle de Refeições (Diário Alimentar)**
+  - Cadastro prático de refeições informando nome e calorias, com captura automática do horário (que também pode ser ajustado).
+  - Gestão completa permitindo a edição ou exclusão ágil de registros incorretos.
+
+- **Cálculos Diários e Dashboard**
+  - Resumo imediato mostrando o total de calorias ingeridas no dia, o tempo consolidado de jejum e o status visual (dentro ou fora da meta).
+
+- **Histórico e Evolução Gráfica**
+  - Lista detalhada para conferência de dias anteriores e um gráfico semanal em formato limpo, ilustrando o progresso e as tendências do usuário.
 
 ---
 
