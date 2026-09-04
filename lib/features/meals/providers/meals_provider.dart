@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/date_utils.dart';
 import '../../../models/meal.dart';
-import '../../../repositories/meal_repository.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../repositories/meals_repository.dart';
 
 final mealRepositoryProvider = Provider((ref) {
   return MealRepository(ref.watch(localStorageServiceProvider));
