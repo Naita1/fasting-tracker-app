@@ -12,6 +12,10 @@ final mealsProvider = StateNotifierProvider<MealsNotifier, List<Meal>>((ref) {
   return MealsNotifier(ref.watch(mealRepositoryProvider));
 });
 
+final allMealsForDashboardProvider = Provider<List<Meal>>((ref) {
+  return ref.watch(mealsProvider);
+});
+
 class MealsNotifier extends StateNotifier<List<Meal>> {
   final MealRepository _repository;
 
@@ -48,6 +52,33 @@ class MealsNotifier extends StateNotifier<List<Meal>> {
 
       await _repository.saveMeal(meal);
       state = [...state, meal];
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> editMeal(String id, String newName, int newCalories) async {
+    try {
+      if (newName.trim().isEmpty || newCalories <= 0) {
+        throw Exception('Nome e calorias devem ser válidos.');
+      }
+
+      final index = state.indexWhere((m) => m.id == id);
+      if (index == -1) throw Exception('Refeição não encontrada.');
+
+      final oldMeal = state[index];
+      final updatedMeal = Meal(
+        id: oldMeal.id,
+        name: newName,
+        calories: newCalories,
+        dateTime: oldMeal.dateTime,
+      );
+
+      await _repository.saveMeal(updatedMeal);
+      
+      final newState = [...state];
+      newState[index] = updatedMeal;
+      state = newState;
     } catch (e) {
       rethrow;
     }
