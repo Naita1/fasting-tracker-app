@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/user_model.dart';
-import '../../../repositories/auth_repository.dart';
 import '../../../services/local_storage_service.dart';
+import '../repositories/auth_repository.dart';
 import 'auth_state.dart';
 
 final localStorageServiceProvider = Provider((ref) => LocalStorageService());

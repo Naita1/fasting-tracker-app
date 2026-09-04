@@ -2,6 +2,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../core/constants/app_constants.dart';
 
 class LocalStorageService {
+  /// Inicializa o armazenamento local e abre todos os "boxes" (tabelas) necessários.
   static Future<void> init() async {
     await Hive.initFlutter();
     await Future.wait([
@@ -11,8 +12,10 @@ class LocalStorageService {
     ]);
   }
 
+  /// Retorna a instância de um box já aberto na memória.
   Box _getBox(String boxName) => Hive.box(boxName);
 
+  /// Salva ou atualiza um par de chave-valor no box especificado.
   Future<void> put(String boxName, String key, Map<String, dynamic> value) async {
     try {
       await _getBox(boxName).put(key, value);
@@ -21,6 +24,7 @@ class LocalStorageService {
     }
   }
 
+  /// Recupera um valor baseado na chave. Retorna [null] se não existir.
   Map<String, dynamic>? get(String boxName, String key) {
     try {
       final data = _getBox(boxName).get(key);
@@ -31,6 +35,7 @@ class LocalStorageService {
     }
   }
 
+  /// Retorna todos os registros salvos em um box específico.
   List<Map<String, dynamic>> getAll(String boxName) {
     try {
       final box = _getBox(boxName);
@@ -40,6 +45,7 @@ class LocalStorageService {
     }
   }
 
+  /// Remove um registro do banco de dados baseado na chave.
   Future<void> delete(String boxName, String key) async {
     try {
       await _getBox(boxName).delete(key);

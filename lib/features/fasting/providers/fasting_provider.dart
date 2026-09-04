@@ -2,16 +2,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../models/fasting_protocol.dart';
 import '../../../models/fasting_session.dart';
-import '../../../repositories/fasting_repository.dart';
+import '../../../services/local_storage_service.dart';
 import '../../../services/notification_service.dart';
 import '../../../services/timer_service.dart';
 import '../../history/providers/history_provider.dart';
+import '../repositories/fasting_repository.dart';
 import 'fasting_state.dart';
 
 final notificationServiceProvider = Provider((ref) => NotificationService());
 final timerServiceProvider = Provider((ref) => TimerService());
 
-final fastingRepositoryProvider = Provider((ref) => FastingRepository());
+final fastingRepositoryProvider =
+    Provider((ref) => FastingRepository(LocalStorageService()));
 
 final timerTickerProvider = StreamProvider.autoDispose<int>((ref) {
   return ref.watch(timerServiceProvider).ticker;
