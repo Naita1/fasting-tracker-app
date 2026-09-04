@@ -69,6 +69,9 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
     final String timeDisplay = session != null
         ? AppDateUtils.formatDuration(session.remainingTime)
         : '00:00:00';
+    final String elapsedDisplay = session != null
+        ? AppDateUtils.formatDuration(session.elapsedTime)
+        : '00:00:00';
     
     final canStart = _selectedProtocol != null;
 
@@ -85,6 +88,7 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
               FastingTimer(
                 progress: progress,
                 remainingTime: timeDisplay,
+            elapsedTime: elapsedDisplay,
                 protocolName: session?.protocol.name ?? _selectedProtocol?.name ?? '16:8',
               ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
               const Spacer(),

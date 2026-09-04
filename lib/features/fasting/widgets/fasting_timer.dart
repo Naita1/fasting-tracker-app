@@ -5,12 +5,14 @@ import '../../../core/theme/app_colors.dart';
 class FastingTimer extends StatelessWidget {
   final double progress;
   final String remainingTime;
+  final String elapsedTime;
   final String protocolName;
 
   const FastingTimer({
     super.key,
     required this.progress,
     required this.remainingTime,
+    required this.elapsedTime,
     required this.protocolName,
   });
 
@@ -59,11 +61,20 @@ class FastingTimer extends StatelessWidget {
               Text(
                 '${(progress * 100).toInt()}% concluído',
                 style: const TextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: FontWeight.w500,
                   color: AppColors.textSecondary,
                 ),
               ),
+          const SizedBox(height: 8),
+          Text(
+            'Decorrido: $elapsedTime',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
+            ),
+          ),
             ],
           ),
         ],
