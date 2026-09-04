@@ -4,6 +4,18 @@ Aplicativo de controle de jejum intermitente e registro calórico diário, desen
 
 ---
 
+## ✨ Funcionalidades (MVP Atendido)
+
+- **Autenticação:** Sessão com persistência local.
+- **Protocolos de Jejum:** Seleção de modelos pré-definidos (12:12, 16:8, 18:6) e criação de protocolos customizados.
+- **Timer Resiliente (Core):** Cálculo preciso com suporte a background/offline, permitindo pausar e encerrar o jejum sem perda de dados.
+- **Notificações:** Alertas agendados nativamente para o início e o término previsto do jejum.
+- **Registro de Refeições:** Inserção, edição e exclusão de refeições com cálculo automático.
+- **Dashboard Diário:** Acompanhamento do tempo total de jejum, calorias consumidas e status da meta diária.
+- **Histórico e Gráficos:** Visualização de dias anteriores e acompanhamento de evolução semanal.
+
+---
+
 ## 📱 Download e Teste
 
 - **Download do APK:** [Baixar APK v1.0.0]
@@ -16,7 +28,7 @@ Certifique-se de ter o [Flutter SDK](https://docs.flutter.dev/get-started/instal
 
 1. Clone o repositório:
    ```bash
-   git clone https://github.com/seu-usuario/fasting-tracker-app.git
+   git clone [COLOQUE_SEU_LINK_DO_GITHUB_AQUI]
    ```
 2. Acesse a pasta do projeto:
    ```bash
@@ -90,3 +102,4 @@ O projeto adota a abordagem **Feature-First (Clean Architecture adaptada)**, sep
 
 ## ⏱️ Tempo Gasto no Desafio
 
+[Preencha aqui quanto tempo você levou, ex: 15 horas divididas em 4 dias]
