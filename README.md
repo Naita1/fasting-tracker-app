@@ -4,6 +4,35 @@ Aplicativo de controle de jejum intermitente e registro calórico diário, desen
 
 ---
 
+## 📱 Download e Teste
+
+- **Download do APK:** [Baixar APK v1.0.0]
+
+---
+
+## 🚀 Como rodar o projeto
+
+Certifique-se de ter o [Flutter SDK](https://docs.flutter.dev/get-started/install) instalado (versão 3.0 ou superior).
+
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/seu-usuario/fasting-tracker-app.git
+   ```
+2. Acesse a pasta do projeto:
+   ```bash
+   cd fasting-tracker-app
+   ```
+3. Instale as dependências:
+   ```bash
+   flutter pub get
+   ```
+4. Execute o aplicativo:
+   ```bash
+   flutter run
+   ```
+
+---
+
 ## 📐 Arquitetura e Estrutura de Pastas
 
 O projeto adota a abordagem **Feature-First (Clean Architecture adaptada)**, separando responsabilidades por contexto de negócio para facilitar manutenção e escalabilidade.
@@ -11,8 +40,7 @@ O projeto adota a abordagem **Feature-First (Clean Architecture adaptada)**, sep
 - **`lib/core/`**: Temas visuais (Design System), constantes globais, rotas e utilitários puros.
 - **`lib/models/`**: Entidades de domínio com métodos de serialização nativos (`toMap` e `fromMap`).
 - **`lib/services/`**: Abstração de serviços de infraestrutura (Hive, notificações locais e pulsos do timer).
-- **`lib/repositories/`**: Camada de dados que unifica o acesso aos serviços e oculta a origem da persistência.
-- **`lib/features/`**: Módulos divididos por funcionalidade, contendo os **Providers (Riverpod)** e a **UI (Screens & Widgets)**.
+- **`lib/features/`**: Módulos divididos por funcionalidade, contendo a camada de dados (**Repositories**), lógica de estado (**Providers**) e a **UI (Screens & Widgets)**.
 
 ---
 
@@ -33,6 +61,18 @@ O projeto adota a abordagem **Feature-First (Clean Architecture adaptada)**, sep
 
 ---
 
+## 📦 Stack e Bibliotecas Utilizadas
+
+- **Linguagem/Framework:** Dart & Flutter (Material 3)
+- **Gerenciamento de Estado e Injeção de Dependências:** `flutter_riverpod`
+- **Navegação (Deep Linking e Bottom Navigation):** `go_router`
+- **Persistência de Dados Local (NoSQL offline-first):** `hive` e `hive_flutter`
+- **Gráficos e Métricas:** `fl_chart`
+- **Notificações Locais e Agendamento:** `flutter_local_notifications` e `timezone`
+- **Utilitários de Data/Hora:** `intl`
+
+---
+
 ## ⚖️ Trade-offs e Limitações de Escopo
 
 - **Notificações Locais vs Firebase FCM:** Optou-se por notificações nativas locais para garantir o funcionamento 100% offline do MVP e evitar dependências de infraestrutura em nuvem.
@@ -45,3 +85,8 @@ O projeto adota a abordagem **Feature-First (Clean Architecture adaptada)**, sep
 1. **Testes de UI (Widget Tests):** Ampliar a cobertura além dos testes unitários para validar fluxos visuais completos.
 2. **CI/CD Pipeline:** Configuração de GitHub Actions para automação de testes, lint e geração de compilação (APK/AAB) a cada *push*.
 3. **Observabilidade:** Integração com Firebase Crashlytics e Analytics para rastreamento de erros e métricas de uso em produção.
+
+---
+
+## ⏱️ Tempo Gasto no Desafio
+
