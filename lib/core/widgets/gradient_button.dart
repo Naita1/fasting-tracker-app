@@ -6,12 +6,14 @@ class GradientButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
   final bool isDestructive;
+  final bool isLoading;
 
   const GradientButton({
     super.key,
     required this.text,
     required this.onPressed,
     this.isDestructive = false,
+    this.isLoading = false,
   });
 
   @override
@@ -38,20 +40,29 @@ class GradientButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {
+          onTap: isLoading ? null : () {
             HapticFeedback.mediumImpact();
             onPressed();
           },
           child: Center(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                letterSpacing: 1,
-              ),
-            ),
+            child: isLoading
+                ? const SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.white,
+                    ),
+                  )
+                : Text(
+                    text,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 1,
+                    ),
+                  ),
           ),
         ),
       ),

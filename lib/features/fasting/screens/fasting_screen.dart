@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/date_utils.dart';
 import '../../../core/widgets/gradient_button.dart';
 import '../../../models/fasting_protocol.dart';
+import '../../../models/fasting_session.dart';
 import '../providers/fasting_provider.dart';
 import '../widgets/custom_protocol_dialog.dart';
 import '../widgets/fasting_timer.dart';
@@ -29,16 +30,46 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
           ))
       .toList();
 
+  void _handleStopFasting(FastingSession session) {
+    final bool isEarlyStop = session.remainingTime > Duration.zero;
+
+    if (isEarlyStop) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Encerrar Jejum?'),
+          content: const Text('Tem certeza que deseja encerrar o jejum antes de atingir a meta?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); 
+                ref.read(fastingNotifierProvider.notifier).stopFasting(isCompleted: false);
+              },
+              child: const Text('Encerrar', style: TextStyle(color: AppColors.error)),
+            ),
+          ],
+        ),
+      );
+    } else {
+      ref.read(fastingNotifierProvider.notifier).stopFasting(isCompleted: true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final session = ref.watch(fastingProvider);
-    final isFasting = session?.status == 'active';
+    final fastingState = ref.watch(fastingNotifierProvider);
+    final FastingSession? session = fastingState.session;
+    final bool isFasting = session?.status == 'active';
 
     final double progress = session?.progressPercentage ?? 0.0;
     final String timeDisplay = session != null
         ? AppDateUtils.formatDuration(session.remainingTime)
         : '00:00:00';
-
+    
     final canStart = _selectedProtocol != null;
 
     return Scaffold(
@@ -70,7 +101,7 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
                   height: 70,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    itemCount: _protocols.length + 1, // +1 para o botão "Custom"
+                    itemCount: _protocols.length + 1, 
                     itemBuilder: (context, index) {
                       if (index == _protocols.length) {
                         final isCustomSelected = _selectedProtocol?.isCustom == true;
@@ -142,20 +173,20 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
                 opacity: (!isFasting && !canStart) ? 0.5 : 1.0,
                 child: GradientButton(
                   text: isFasting ? 'ENCERRAR JEJUM' : 'INICIAR JEJUM',
+                  isLoading: fastingState.isLoading,
                   isDestructive: isFasting,
                   onPressed: () {
-                    final notifier = ref.read(fastingProvider.notifier);
                     if (isFasting) {
-                      notifier.stopFasting();
+                      _handleStopFasting(session!);
                       return;
                     }
                     if (!canStart) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Selecione um protocolo antes de iniciar')),
+                        const SnackBar(content: Text('Por favor, selecione um protocolo para iniciar.')),
                       );
                       return;
                     }
-                    notifier.startFasting(_selectedProtocol!);
+                    ref.read(fastingNotifierProvider.notifier).startFasting(_selectedProtocol!);
                     setState(() => _selectedProtocol = null);
                   },
                 ),
