@@ -61,6 +61,44 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<void> register(
+  String email,
+  String password,
+  String confirmPassword,
+) async {
+  state = state.copyWith(isLoading: true, errorMessage: () => null);
+
+  try {
+    if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
+      throw InvalidCredentialsException('Por favor, insira um e-mail válido.');
+    }
+
+    if (password.length < 6) {
+      throw InvalidCredentialsException('A senha deve ter pelo menos 6 caracteres.');
+    }
+
+    if (password != confirmPassword) {
+      throw InvalidCredentialsException('As senhas não coincidem.');
+    }
+
+    final user = UserModel(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      email: email,
+      isLoggedIn: true,
+    );
+
+    await _repository.saveUser(user);
+    state = AuthState(user: user, isLoading: false);
+  } on AuthException catch (e) {
+    state = state.copyWith(isLoading: false, errorMessage: () => e.message);
+  } catch (_) {
+    state = state.copyWith(
+      isLoading: false,
+      errorMessage: () => 'Ocorreu um erro inesperado ao criar a conta.',
+    );
+  }
+}
+
   Future<void> logout() async {
     state = state.copyWith(isLoading: true, errorMessage: () => null);
 
