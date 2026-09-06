@@ -130,6 +130,7 @@ Para executar toda a suíte de testes:
 
 ```bash
 flutter test
+```
 
 ---
 
@@ -146,4 +147,4 @@ flutter test
 
 ## ⏱️ Tempo Gasto no Desafio
 
-O desenvolvimento levou 4 dias
+O desenvolvimento levou 4 dias.
