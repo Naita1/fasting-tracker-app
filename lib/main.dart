@@ -43,7 +43,7 @@ class FastingTrackerApp extends StatelessWidget {
       title: 'Fasting Tracker',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      routerConfig: appRouter,
+      routerConfig: AppRoutes.router, // Conecta diretamente à tabela de rotas do AppRoutes
     );
   }
 }

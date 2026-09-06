@@ -61,6 +61,8 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(timerTickerProvider);
+
     final fastingState = ref.watch(fastingNotifierProvider);
     final FastingSession? session = fastingState.session;
     final bool isFasting = session?.status == 'active';

@@ -1,42 +1,46 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/history_provider.dart'; 
 
-class HistoryScreen extends ConsumerWidget {
-  const HistoryScreen({super.key});
+class FastingSession {
+  final String status; 
+  final Duration elapsedTime;
+  final Duration duration;
+  final DateTime startedAt;
+  final dynamic protocol;
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final historyState = ref.watch(historyProvider);
+  FastingSession({
+    required this.status,
+    required this.elapsedTime,
+    required this.duration,
+    required this.startedAt,
+    this.protocol,
+  });
+}
 
-    if (historyState.isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
+class HistoryState {
+  final List<FastingSession> sessions;
+  final bool isLoading;
+  final String? errorMessage;
 
-    if (historyState.errorMessage != null) {
-      return Scaffold(
-        body: Center(child: Text(historyState.errorMessage!)),
-      );
-    }
+  const HistoryState({
+    this.sessions = const [],
+    this.isLoading = false,
+    this.errorMessage,
+  });
+}
 
-    final sessions = historyState.sessions;
+// Gerenciador do Estado
+class HistoryNotifier extends StateNotifier<HistoryState> {
+  HistoryNotifier() : super(const HistoryState());
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Histórico de Jejuns')),
-      body: sessions.isEmpty
-          ? const Center(child: Text('Nenhum jejum registrado ainda.'))
-          : ListView.builder(
-              itemCount: sessions.length,
-              itemBuilder: (context, index) {
-                final session = sessions[index];
-                return ListTile(
-                  title: Text('Protocolo ${session.protocol.name}'),
-                  subtitle: Text('Duração: ${session.duration.inHours}h'),
-                );
-              },
-            ),
+  void addSession(FastingSession session) {
+    state = HistoryState(
+      sessions: [...state.sessions, session],
+      isLoading: false,
     );
   }
 }
+
+
+final historyProvider = StateNotifierProvider<HistoryNotifier, HistoryState>((ref) {
+  return HistoryNotifier();
+});

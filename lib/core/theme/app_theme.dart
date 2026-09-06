@@ -30,7 +30,7 @@ abstract class AppTheme {
           color: AppColors.textSecondary,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.surface,
         elevation: 4,
         shadowColor: Colors.black.withValues(alpha: 0.4),

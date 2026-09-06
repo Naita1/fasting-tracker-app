@@ -1,10 +1,9 @@
-import 'package:collection/collection.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/utils/app_date_utils.dart';
+import '../../../core/utils/date_utils.dart';
 import '../../history/providers/history_provider.dart';
 import '../../meals/providers/meals_provider.dart';
 
@@ -24,12 +23,9 @@ class DashboardMetrics {
 
 final dashboardProvider = Provider<DashboardMetrics>((ref) {
   final allMeals = ref.watch(mealsProvider); 
-  final historyState = ref.watch(historyNotifierProvider);
+  final historyState = ref.watch(historyProvider);
 
-  final allSessions = historyState.maybeWhen(
-    data: (sessions) => sessions,
-    orElse: () => [],
-  );
+  final allSessions = historyState.sessions;
 
   final today = DateTime.now();
   final normalizedToday = DateTime(today.year, today.month, today.day);

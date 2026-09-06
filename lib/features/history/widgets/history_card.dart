@@ -24,7 +24,7 @@ class HistoryCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4.0),
         child: ListTile(
-          isThreeline: true,
+          isThreeLine: true,
           leading: Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(

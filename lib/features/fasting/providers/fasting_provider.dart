@@ -5,7 +5,7 @@ import '../../../models/fasting_session.dart';
 import '../../../services/local_storage_service.dart';
 import '../../../services/notification_service.dart';
 import '../../../services/timer_service.dart';
-import '../../history/providers/history_provider.dart';
+import '../../history/providers/history_provider.dart' as history_provider;
 import '../repositories/fasting_repository.dart';
 import 'fasting_state.dart';
 
@@ -108,8 +108,7 @@ class FastingNotifier extends StateNotifier<FastingState> {
 
       state = const FastingState();
 
-      _ref.invalidate(historyNotifierProvider);
-    } catch (e) {
+    _ref.invalidate(history_provider.historyProvider);    } catch (e) {
       state = state.copyWith(isLoading: false);
       rethrow;
     }

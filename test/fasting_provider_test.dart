@@ -6,7 +6,7 @@ void main() {
   group('FastingSession Unit Tests', () {
     test('Deve criar uma instancia valida de FastingSession', () {
       final now = DateTime.now();
-      final protocol = FastingProtocol(id: '1', name: '16:8', fastingHours: 16, eatingHours: 8);
+      const protocol = FastingProtocol(id: '1', name: '16:8', fastingHours: 16, eatingHours: 8);
       final session = FastingSession(
         id: '1',
         startedAt: now,
@@ -22,7 +22,7 @@ void main() {
 
     test('Deve converter para Map e reconstruir via fromMap', () {
       final now = DateTime.now();
-      final protocol = FastingProtocol(id: '1', name: '16:8', fastingHours: 16, eatingHours: 8);
+      const protocol = FastingProtocol(id: '1', name: '16:8', fastingHours: 16, eatingHours: 8);
       final session = FastingSession(
         id: '1',
         startedAt: now,
