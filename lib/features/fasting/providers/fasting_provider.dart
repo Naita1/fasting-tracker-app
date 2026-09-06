@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../models/fasting_protocol.dart';
@@ -144,7 +145,7 @@ class FastingNotifier extends StateNotifier<FastingState> {
     }
   }
 
-  Future<void> stopFasting({bool isCompleted = true}) async {
+ Future<void> stopFasting({bool isCompleted = true}) async {
     final current = state.session;
     if (current == null || state.isLoading) return;
 
@@ -159,18 +160,21 @@ class FastingNotifier extends StateNotifier<FastingState> {
       await _repository.saveToHistory(updatedSession);
       await _repository.clearActiveSession();
 
-      await _notificationService.cancelNotification(_completionNotificationId);
+      try {
+        await _notificationService.cancelNotification(_completionNotificationId);
 
-     if (isCompleted) {
-        await _notificationService.showNotification(
-          id: 2,
-          title: 'Jejum Concluído! 🎉',
-          body: 'Parabéns! Você alcançou sua meta de ${updatedSession.protocol.name}.',
-        );
+        if (isCompleted) {
+          await _notificationService.showNotification(
+            id: 2,
+            title: 'Jejum Concluído! 🎉',
+            body: 'Parabéns! Você alcançou sua meta de ${updatedSession.protocol.name}.',
+          );
+        }
+      } catch (notifError) {
+        debugPrint('Erro ao processar notificações no encerramento: $notifError');
       }
 
       state = const FastingState();
-
       _ref.invalidate(history_provider.historyProvider);
     } catch (e) {
       state = state.copyWith(isLoading: false);

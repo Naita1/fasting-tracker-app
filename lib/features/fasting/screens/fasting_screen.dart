@@ -30,11 +30,11 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
           ))
       .toList();
 
-  void _handleStopFasting(FastingSession session) {
+  Future<void> _handleStopFasting(FastingSession session) async {
     final bool isEarlyStop = session.remainingTime > Duration.zero;
 
     if (isEarlyStop) {
-      showDialog(
+      final shouldStop = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Encerrar Jejum?'),
@@ -45,17 +45,32 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
               child: const Text('Cancelar'),
             ),
             TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                ref.read(fastingNotifierProvider.notifier).stopFasting(isCompleted: false);
-              },
+              onPressed: () => Navigator.pop(context, true),
               child: const Text('Encerrar', style: TextStyle(color: AppColors.error)),
             ),
           ],
         ),
       );
+
+      if (shouldStop != true || !mounted) return;
+
+      try {
+        await ref.read(fastingNotifierProvider.notifier).stopFasting(isCompleted: false);
+      } catch (error) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Não foi possível encerrar o jejum: $error')),
+        );
+      }
     } else {
-      ref.read(fastingNotifierProvider.notifier).stopFasting(isCompleted: true);
+      try {
+        await ref.read(fastingNotifierProvider.notifier).stopFasting(isCompleted: true);
+      } catch (error) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Não foi possível encerrar o jejum: $error')),
+        );
+      }
     }
   }
 
