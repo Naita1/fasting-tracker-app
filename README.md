@@ -18,7 +18,7 @@ Aplicativo de controle de jejum intermitente e registro calórico diário, desen
   - **À prova de falhas:** Continua operando em background. Graças à lógica de Timestamps, se o app for "morto" pelo sistema operacional, nenhum dado de tempo é perdido.
 
 - **Notificações Inteligentes (Offline)**
-  - Alertas locais agendados nativamente informam o usuário exatamente no momento em que o jejum inicia e quando a meta de término é atingida.
+  - Alertas locais agendados nativamente informam o usuário exatamente no momento em que o jejum inicia e quando a meta de término é atingida. Também dispara uma notificação imediata quando o jejum é encerrado manualmente antes do horário planejado.
 
 - **Controle de Refeições (Diário Alimentar)**
   - Cadastro prático de refeições informando nome e calorias, com captura automática do horário (que também pode ser ajustado).
@@ -43,21 +43,21 @@ Aplicativo de controle de jejum intermitente e registro calórico diário, desen
 Certifique-se de ter o [Flutter SDK](https://docs.flutter.dev/get-started/install) instalado (versão 3.0 ou superior).
 
 1. Clone o repositório:
-   ```bash
+```bash
    git clone [COLOQUE_SEU_LINK_DO_GITHUB_AQUI]
-   ```
+```
 2. Acesse a pasta do projeto:
-   ```bash
+```bash
    cd fasting-tracker-app
-   ```
+```
 3. Instale as dependências:
-   ```bash
+```bash
    flutter pub get
-   ```
+```
 4. Execute o aplicativo:
-   ```bash
+```bash
    flutter run
-   ```
+```
 
 ---
 
@@ -87,6 +87,11 @@ O projeto adota a abordagem **Feature-First (Clean Architecture adaptada)**, sep
 - **Desempenho:** Armazenamento em chave-valor de altíssima velocidade.
 - **Trade-off Consciente:** Mapeamento feito manualmente via `Map<String, dynamic>` para evitar o uso de geradores de código (`build_runner` e `hive_generator`). Essa escolha reduziu o tempo de compilação, eliminou conflitos de versão no SDK do Dart e simplificou o setup inicial.
 
+### 4. Pausar o Jejum: Implementado por Fidelidade ao Requisito
+- O requisito do desafio cita explicitamente "Pausar/encerrar" como controle do timer.
+- Do ponto de vista fisiológico, um jejum intermitente continua ocorrendo independente do app estar pausado — diferente de um cronômetro de treino. Apps de referência do mercado (Zero, LIFE Fasting Tracker) não oferecem essa função por esse motivo.
+- Optei por implementar mesmo assim, tratando-a como controle de UX (o app "congela" a exibição do progresso), não como uma pausa biológica real. O tempo pausado é rastreado via `accumulatedPausedDuration` e descontado do cálculo de progresso ao retomar, preservando a precisão do tempo restante. A notificação de conclusão agendada é cancelada ao pausar e reagendada ao retomar, considerando o novo horário efetivo de término.
+
 ---
 
 ## 📦 Stack e Bibliotecas Utilizadas
@@ -98,13 +103,33 @@ O projeto adota a abordagem **Feature-First (Clean Architecture adaptada)**, sep
 - **Gráficos e Métricas:** `fl_chart`
 - **Notificações Locais e Agendamento:** `flutter_local_notifications` e `timezone`
 - **Utilitários de Data/Hora:** `intl`
+- **UI e Animações:** `google_fonts`, `flutter_animate`
 
 ---
 
 ## ⚖️ Trade-offs e Limitações de Escopo
 
 - **Notificações Locais vs Firebase FCM:** Optou-se por notificações nativas locais para garantir o funcionamento 100% offline do MVP e evitar dependências de infraestrutura em nuvem.
-- **Autenticação Local:** O fluxo de autenticação foi mantido localmente para priorizar a qualidade da entrega do Timer e do Registro de Refeições no prazo estipulado.
+- **Autenticação Local:** O fluxo de autenticação foi mantido localmente para priorizar a qualidade da entrega do Timer e do Registro de Refeições no prazo estipulado. O login valida apenas formato de e-mail e senha com mínimo de 6 caracteres — não há verificação contra um backend real.
+- **Meta de jejum diária:** não há tela dedicada de configuração de meta. A meta do dia é derivada automaticamente das horas do protocolo em uso (sessão ativa/pausada, ou último protocolo concluído no dia), com fallback de 16h caso nenhuma sessão exista.
+- **Métrica "Jejum Hoje" não divide sessões que atravessam a meia-noite:** o tempo de jejum do dia é calculado com base no dia em que a sessão foi *iniciada*. Um jejum que começa às 22h e termina às 14h do dia seguinte é contabilizado inteiramente no dia de início, não distribuído proporcionalmente entre os dois dias. Uma implementação mais precisa dividiria o tempo pelo dia civil correspondente.
+- **Sem redirect global de rotas protegidas:** a sessão é verificada na tela de login, mas não há um `redirect` global no `GoRouter` impedindo o acesso direto a rotas internas (ex: `/fasting`) sem autenticação prévia via deep link.
+
+---
+
+## 🧪 Testes Automatizados
+
+O projeto conta com uma suíte abrangente de **148 testes unitários** organizados em `test/`, cobrindo as regras de negócio do Timer, Mapeamentos de Modelos (Hive), Repositórios e Notifiers:
+
+- `test/models/`: Validação de contratos, limites de progresso (0-100%) e calculadoras de tempo.
+- `test/providers/`: Regras do estado de jejum, histórico e gerenciamento de sessões.
+- `test/repositories/`: Isolamento e integridade dos dados locais.
+- `test/utils/`: Formatação e utilitários de data/hora.
+
+Para executar toda a suíte de testes:
+
+```bash
+flutter test
 
 ---
 
@@ -113,9 +138,12 @@ O projeto adota a abordagem **Feature-First (Clean Architecture adaptada)**, sep
 1. **Testes de UI (Widget Tests):** Ampliar a cobertura além dos testes unitários para validar fluxos visuais completos.
 2. **CI/CD Pipeline:** Configuração de GitHub Actions para automação de testes, lint e geração de compilação (APK/AAB) a cada *push*.
 3. **Observabilidade:** Integração com Firebase Crashlytics e Analytics para rastreamento de erros e métricas de uso em produção.
+4. **Redirect global de autenticação:** Proteger todas as rotas internas no `GoRouter` contra acesso sem sessão válida, não apenas a tela de login.
+5. **Distribuição proporcional de jejum entre dias:** Ajustar o cálculo de "Jejum Hoje" para dividir corretamente sessões que atravessam a meia-noite entre os dois dias civis correspondentes.
+6. **Autenticação real:** Substituir a validação local simplificada por um backend de autenticação real (ex: Firebase Auth), incluindo recuperação de senha.
 
 ---
 
 ## ⏱️ Tempo Gasto no Desafio
 
-[Preencha aqui quanto tempo você levou, ex: 15 horas divididas em 4 dias]
+O desenvolvimento levou 4 dias
