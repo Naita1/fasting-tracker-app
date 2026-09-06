@@ -5,8 +5,10 @@ class FastingSession {
   final DateTime startedAt;
   final DateTime plannedEndAt;
   final DateTime? actualEndAt;
-  final String status;
+  final String status; // 'active' | 'paused' | 'completed' | 'cancelled'
   final FastingProtocol protocol;
+  final DateTime? pausedAt;
+  final Duration accumulatedPausedDuration;
 
   const FastingSession({
     required this.id,
@@ -15,22 +17,34 @@ class FastingSession {
     this.actualEndAt,
     required this.status,
     required this.protocol,
+    this.pausedAt,
+    this.accumulatedPausedDuration = Duration.zero,
   });
 
+  bool get isPaused => status == 'paused';
+  bool get isActive => status == 'active';
+
+  DateTime get _referenceNow {
+    if (isPaused && pausedAt != null) return pausedAt!;
+    return actualEndAt ?? DateTime.now();
+  }
+
   Duration get elapsedTime {
-    final endTime = actualEndAt ?? DateTime.now();
-    return endTime.difference(startedAt);
+    final raw = _referenceNow.difference(startedAt);
+    final effective = raw - accumulatedPausedDuration;
+    return effective.isNegative ? Duration.zero : effective;
   }
 
   Duration get remainingTime {
-    if (status != 'active') return Duration.zero;
-    final remaining = plannedEndAt.difference(DateTime.now());
+    if (status == 'completed' || status == 'cancelled') return Duration.zero;
+    final totalPlanned = plannedEndAt.difference(startedAt);
+    final remaining = totalPlanned - elapsedTime;
     return remaining.isNegative ? Duration.zero : remaining;
   }
 
   double get progressPercentage {
     final totalDuration = plannedEndAt.difference(startedAt).inSeconds;
-    if (totalDuration == 0) return 0.0;
+    if (totalDuration <= 0) return 0.0;
     final elapsed = elapsedTime.inSeconds;
     return (elapsed / totalDuration).clamp(0.0, 1.0);
   }
@@ -43,6 +57,8 @@ class FastingSession {
       'actualEndAt': actualEndAt?.toIso8601String(),
       'status': status,
       'protocol': protocol.toMap(),
+      'pausedAt': pausedAt?.toIso8601String(),
+      'accumulatedPausedSeconds': accumulatedPausedDuration.inSeconds,
     };
   }
 
@@ -67,6 +83,11 @@ class FastingSession {
               fastingHours: 16,
               eatingHours: 8,
             ),
+      pausedAt: map['pausedAt'] != null
+          ? DateTime.parse(map['pausedAt'].toString())
+          : null,
+      accumulatedPausedDuration:
+          Duration(seconds: (map['accumulatedPausedSeconds'] as num?)?.toInt() ?? 0),
     );
   }
 
@@ -77,6 +98,8 @@ class FastingSession {
     DateTime? actualEndAt,
     String? status,
     FastingProtocol? protocol,
+    DateTime? Function()? pausedAt,
+    Duration? accumulatedPausedDuration,
   }) {
     return FastingSession(
       id: id ?? this.id,
@@ -85,6 +108,8 @@ class FastingSession {
       actualEndAt: actualEndAt ?? this.actualEndAt,
       status: status ?? this.status,
       protocol: protocol ?? this.protocol,
+      pausedAt: pausedAt != null ? pausedAt() : this.pausedAt,
+      accumulatedPausedDuration: accumulatedPausedDuration ?? this.accumulatedPausedDuration,
     );
   }
 
@@ -97,7 +122,9 @@ class FastingSession {
         other.plannedEndAt == plannedEndAt &&
         other.actualEndAt == actualEndAt &&
         other.status == status &&
-        other.protocol == protocol;
+        other.protocol == protocol &&
+        other.pausedAt == pausedAt &&
+        other.accumulatedPausedDuration == accumulatedPausedDuration;
   }
 
   @override
@@ -107,7 +134,9 @@ class FastingSession {
         plannedEndAt.hashCode ^
         actualEndAt.hashCode ^
         status.hashCode ^
-        protocol.hashCode;
+        protocol.hashCode ^
+        pausedAt.hashCode ^
+        accumulatedPausedDuration.hashCode;
   }
 
   @override

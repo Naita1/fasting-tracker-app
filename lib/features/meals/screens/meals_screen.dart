@@ -11,15 +11,15 @@ class MealsScreen extends ConsumerWidget {
 
   Future<void> _showMealForm(BuildContext context, WidgetRef ref, [Meal? mealToEdit]) async {
     final result = await showModalBottomSheet<Map<String, dynamic>>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.background,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => AddMealBottomSheet(meal: mealToEdit),
-    );
-
+        context: context,
+        useRootNavigator: true, // renderiza no Navigator raiz, acima da bottom bar do MainShellScreen
+        isScrollControlled: true,
+        backgroundColor: AppColors.background,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (_) => AddMealBottomSheet(meal: mealToEdit),
+      );
     if (result != null) {
       if (mealToEdit == null) {
         await ref.read(mealsProvider.notifier).addMeal(
@@ -88,10 +88,13 @@ class MealsScreen extends ConsumerWidget {
                 );
               },
             ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.primary,
-        onPressed: () => _showMealForm(context, ref),
-        child: const Icon(Icons.add),
+      floatingActionButton: Padding(
+       padding: const EdgeInsets.only(bottom: 90),
+        child: FloatingActionButton(
+          backgroundColor: AppColors.primary,
+          onPressed: () => _showMealForm(context, ref),
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }

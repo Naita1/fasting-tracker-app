@@ -52,6 +52,10 @@ class FastingNotifier extends StateNotifier<FastingState> {
     }
   }
 
+  DateTime _effectiveCompletionTime(FastingSession session) {
+    return session.plannedEndAt.add(session.accumulatedPausedDuration);
+  }
+
   Future<void> startFasting(FastingProtocol protocol) async {
     if (state.isLoading) return;
     state = state.copyWith(isLoading: true);
@@ -89,6 +93,57 @@ class FastingNotifier extends StateNotifier<FastingState> {
     }
   }
 
+  Future<void> pauseFasting() async {
+    final current = state.session;
+    if (current == null || !current.isActive || state.isLoading) return;
+
+    state = state.copyWith(isLoading: true);
+
+    try {
+      final pausedSession = current.copyWith(
+        status: 'paused',
+        pausedAt: () => DateTime.now(),
+      );
+
+      await _repository.saveActiveSession(pausedSession);
+      state = FastingState(session: pausedSession, isLoading: false);
+
+    await _notificationService.cancelNotification(_completionNotificationId);
+    } catch (e) {
+      state = state.copyWith(isLoading: false);
+      rethrow;
+    }
+  }
+
+  Future<void> resumeFasting() async {
+    final current = state.session;
+    if (current == null || !current.isPaused || current.pausedAt == null || state.isLoading) return;
+
+    state = state.copyWith(isLoading: true);
+
+    try {
+      final pauseDuration = DateTime.now().difference(current.pausedAt!);
+      final resumedSession = current.copyWith(
+        status: 'active',
+        pausedAt: () => null,
+        accumulatedPausedDuration: current.accumulatedPausedDuration + pauseDuration,
+      );
+
+      await _repository.saveActiveSession(resumedSession);
+      state = FastingState(session: resumedSession, isLoading: false);
+
+   await _notificationService.scheduleNotification(
+        id: _completionNotificationId,
+        title: 'Jejum Concluído! 🎉',
+        body: 'Parabéns! Você alcançou sua meta de ${resumedSession.protocol.name}.',
+        scheduledDate: _effectiveCompletionTime(resumedSession),
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false);
+      rethrow;
+    }
+  }
+
   Future<void> stopFasting({bool isCompleted = true}) async {
     final current = state.session;
     if (current == null || state.isLoading) return;
@@ -106,9 +161,18 @@ class FastingNotifier extends StateNotifier<FastingState> {
 
       await _notificationService.cancelNotification(_completionNotificationId);
 
+     if (isCompleted) {
+        await _notificationService.showNotification(
+          id: 2,
+          title: 'Jejum Concluído! 🎉',
+          body: 'Parabéns! Você alcançou sua meta de ${updatedSession.protocol.name}.',
+        );
+      }
+
       state = const FastingState();
 
-    _ref.invalidate(history_provider.historyProvider);    } catch (e) {
+      _ref.invalidate(history_provider.historyProvider);
+    } catch (e) {
       state = state.copyWith(isLoading: false);
       rethrow;
     }

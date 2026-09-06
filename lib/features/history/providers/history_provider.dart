@@ -1,20 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-class FastingSession {
-  final String status; 
-  final Duration elapsedTime;
-  final Duration duration;
-  final DateTime startedAt;
-  final dynamic protocol;
-
-  FastingSession({
-    required this.status,
-    required this.elapsedTime,
-    required this.duration,
-    required this.startedAt,
-    this.protocol,
-  });
-}
+import '../../../models/fasting_session.dart';
+import '../../fasting/providers/fasting_provider.dart';
 
 class HistoryState {
   final List<FastingSession> sessions;
@@ -26,21 +12,40 @@ class HistoryState {
     this.isLoading = false,
     this.errorMessage,
   });
-}
 
-// Gerenciador do Estado
-class HistoryNotifier extends StateNotifier<HistoryState> {
-  HistoryNotifier() : super(const HistoryState());
-
-  void addSession(FastingSession session) {
-    state = HistoryState(
-      sessions: [...state.sessions, session],
-      isLoading: false,
+  HistoryState copyWith({
+    List<FastingSession>? sessions,
+    bool? isLoading,
+    String? errorMessage,
+  }) {
+    return HistoryState(
+      sessions: sessions ?? this.sessions,
+      isLoading: isLoading ?? this.isLoading,
+      errorMessage: errorMessage,
     );
   }
 }
 
+class HistoryNotifier extends StateNotifier<HistoryState> {
+  final Ref _ref;
+
+  HistoryNotifier(this._ref) : super(const HistoryState()) {
+    loadHistory();
+  }
+
+  void loadHistory() {
+    state = state.copyWith(isLoading: true);
+    try {
+      final repository = _ref.read(fastingRepositoryProvider);
+      final sessions = repository.getHistory();
+      sessions.sort((a, b) => b.startedAt.compareTo(a.startedAt));
+      state = HistoryState(sessions: sessions, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+    }
+  }
+}
 
 final historyProvider = StateNotifierProvider<HistoryNotifier, HistoryState>((ref) {
-  return HistoryNotifier();
+  return HistoryNotifier(ref);
 });

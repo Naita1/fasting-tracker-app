@@ -46,7 +46,7 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(context); 
+                Navigator.pop(context);
                 ref.read(fastingNotifierProvider.notifier).stopFasting(isCompleted: false);
               },
               child: const Text('Encerrar', style: TextStyle(color: AppColors.error)),
@@ -65,7 +65,9 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
 
     final fastingState = ref.watch(fastingNotifierProvider);
     final FastingSession? session = fastingState.session;
-    final bool isFasting = session?.status == 'active';
+    final bool hasSession = session != null;
+    final bool isActive = session?.status == 'active';
+    final bool isPaused = session?.status == 'paused';
 
     final double progress = session?.progressPercentage ?? 0.0;
     final String timeDisplay = session != null
@@ -74,7 +76,7 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
     final String elapsedDisplay = session != null
         ? AppDateUtils.formatDuration(session.elapsedTime)
         : '00:00:00';
-    
+
     final canStart = _selectedProtocol != null;
 
     return Scaffold(
@@ -87,14 +89,32 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
           child: Column(
             children: [
               const Spacer(),
+              if (isPaused)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'JEJUM PAUSADO',
+                    style: TextStyle(
+                      color: Colors.orange,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
               FastingTimer(
                 progress: progress,
                 remainingTime: timeDisplay,
-            elapsedTime: elapsedDisplay,
+                elapsedTime: elapsedDisplay,
                 protocolName: session?.protocol.name ?? _selectedProtocol?.name ?? '16:8',
               ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
               const Spacer(),
-              if (!isFasting) ...[
+              if (!hasSession) ...[
                 const Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -107,7 +127,7 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
                   height: 70,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    itemCount: _protocols.length + 1, 
+                    itemCount: _protocols.length + 1,
                     itemBuilder: (context, index) {
                       if (index == _protocols.length) {
                         final isCustomSelected = _selectedProtocol?.isCustom == true;
@@ -175,28 +195,52 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
                 ),
                 const SizedBox(height: 24),
               ],
-              Opacity(
-                opacity: (!isFasting && !canStart) ? 0.5 : 1.0,
-                child: GradientButton(
-                  text: isFasting ? 'ENCERRAR JEJUM' : 'INICIAR JEJUM',
-                  isLoading: fastingState.isLoading,
-                  isDestructive: isFasting,
-                  onPressed: () {
-                    if (isFasting) {
-                      _handleStopFasting(session!);
-                      return;
-                    }
-                    if (!canStart) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Por favor, selecione um protocolo para iniciar.')),
-                      );
-                      return;
-                    }
-                    ref.read(fastingNotifierProvider.notifier).startFasting(_selectedProtocol!);
-                    setState(() => _selectedProtocol = null);
-                  },
+              if (!hasSession)
+                Opacity(
+                  opacity: canStart ? 1.0 : 0.5,
+                  child: GradientButton(
+                    text: 'INICIAR JEJUM',
+                    isLoading: fastingState.isLoading,
+                    onPressed: () {
+                      if (!canStart) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Por favor, selecione um protocolo para iniciar.')),
+                        );
+                        return;
+                      }
+                      ref.read(fastingNotifierProvider.notifier).startFasting(_selectedProtocol!);
+                      setState(() => _selectedProtocol = null);
+                    },
+                  ),
+                )
+              else
+                Row(
+                  children: [
+                    Expanded(
+                      child: GradientButton(
+                        text: isActive ? 'PAUSAR' : 'RETOMAR',
+                        isLoading: fastingState.isLoading,
+                        onPressed: () {
+                          final notifier = ref.read(fastingNotifierProvider.notifier);
+                          if (isActive) {
+                            notifier.pauseFasting();
+                          } else {
+                            notifier.resumeFasting();
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: GradientButton(
+                        text: 'ENCERRAR',
+                        isDestructive: true,
+                        isLoading: fastingState.isLoading,
+                        onPressed: () => _handleStopFasting(session),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
               const SizedBox(height: 12),
             ],
           ),

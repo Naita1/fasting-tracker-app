@@ -46,8 +46,8 @@ class HistoryScreen extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       itemCount: state.sessions.length,
       itemBuilder: (context, index) {
-        return HistoryCard(session: state.sessions[index] as dynamic);
-      },
+        return HistoryCard(session: state.sessions[index]);
+      },    
     );
   }
 }
