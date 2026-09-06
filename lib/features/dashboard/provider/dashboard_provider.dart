@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/date_utils.dart';
+import '../../fasting/providers/fasting_provider.dart';
 import '../../history/providers/history_provider.dart';
 import '../../meals/providers/meals_provider.dart';
 
@@ -12,23 +13,62 @@ class DashboardMetrics {
   final String averageFastingHours;
   final List<BarChartGroupData> weeklyCalorieBars;
   final List<String> weekDays;
+  final int todayTotalCalories;
+  final Duration todayFastingDuration;
+  final Duration todayFastingGoal;
+  final bool isWithinFastingGoal;
 
   const DashboardMetrics({
     required this.fastingStreak,
     required this.averageFastingHours,
     required this.weeklyCalorieBars,
     required this.weekDays,
+    required this.todayTotalCalories,
+    required this.todayFastingDuration,
+    required this.todayFastingGoal,
+    required this.isWithinFastingGoal,
   });
 }
 
 final dashboardProvider = Provider<DashboardMetrics>((ref) {
-  final allMeals = ref.watch(mealsProvider); 
+  final allMeals = ref.watch(mealsProvider);
   final historyState = ref.watch(historyProvider);
+  final fastingState = ref.watch(fastingNotifierProvider);
 
   final allSessions = historyState.sessions;
+  final currentSession = fastingState.session;
 
   final today = DateTime.now();
   final normalizedToday = DateTime(today.year, today.month, today.day);
+
+  bool isToday(DateTime date) {
+    final d = DateTime(date.year, date.month, date.day);
+    return d == normalizedToday;
+  }
+
+  final todayTotalCalories = allMeals
+      .where((meal) => AppDateUtils.isToday(meal.dateTime))
+      .fold<int>(0, (sum, meal) => sum + meal.calories);
+
+  Duration todayFastingDuration = allSessions
+      .where((s) => isToday(s.startedAt))
+      .fold<Duration>(Duration.zero, (sum, s) => sum + s.elapsedTime);
+
+  if (currentSession != null && isToday(currentSession.startedAt)) {
+    todayFastingDuration += currentSession.elapsedTime;
+  }
+
+  int goalHours = 16;
+  if (currentSession != null && isToday(currentSession.startedAt)) {
+    goalHours = currentSession.protocol.fastingHours;
+  } else {
+    final todaysSessions = allSessions.where((s) => isToday(s.startedAt)).toList();
+    if (todaysSessions.isNotEmpty) {
+      goalHours = todaysSessions.last.protocol.fastingHours;
+    }
+  }
+  final todayFastingGoal = Duration(hours: goalHours);
+  final isWithinFastingGoal = todayFastingDuration >= todayFastingGoal;
 
   final Map<int, double> dailyCalories = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0};
   final List<String> weekDays = [];
@@ -85,7 +125,7 @@ final dashboardProvider = Provider<DashboardMetrics>((ref) {
         .map((s) => DateTime(s.startedAt.year, s.startedAt.month, s.startedAt.day))
         .toSet()
         .toList()
-      ..sort((a, b) => b.compareTo(a)); 
+      ..sort((a, b) => b.compareTo(a));
 
     DateTime currentCheckDate = normalizedToday;
 
@@ -104,5 +144,9 @@ final dashboardProvider = Provider<DashboardMetrics>((ref) {
     averageFastingHours: averageFastingHours,
     weeklyCalorieBars: weeklyCalorieBars,
     weekDays: weekDays,
+    todayTotalCalories: todayTotalCalories,
+    todayFastingDuration: todayFastingDuration,
+    todayFastingGoal: todayFastingGoal,
+    isWithinFastingGoal: isWithinFastingGoal,
   );
 });
